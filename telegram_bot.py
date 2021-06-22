@@ -7,7 +7,7 @@ import time, datetime
 import os
 import cv2
 
-admin_chat_id = '1144964888' #chat_id of admin in int form
+admin_chat_id = '' #chat_id of admin in int form
 admin_name= "Nazeemuddin basha"
 
 file_found=False
@@ -122,7 +122,7 @@ def action(msg):
         else:
             telegram_bot.sendMessage(chat_id, 'sorry invalid code')
 
-telegram_bot = telepot.Bot('1770824552:AAH1kKpQWduNBVgGPvVkFJASvIA-m7XgzJw')
+telegram_bot = telepot.Bot('api from botfather')
 test_message()
 print(telegram_bot.getMe())#for internal testing
 
