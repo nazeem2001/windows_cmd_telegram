@@ -22,6 +22,7 @@ please install requirements by
    exit**
    
  2. create a .vbs file in the same folder 
+
     Set WshShell = CreateObject("WScript.Shell") 
     
 WshShell.Run chr(34) & "name_of_the_file" & Chr(34), 0
