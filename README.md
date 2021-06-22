@@ -2,4 +2,4 @@
 
 
 please install requirements by
-pip install requirements.txt
+**pip install requirements.txt**
