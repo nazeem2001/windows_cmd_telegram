@@ -25,7 +25,7 @@ please install requirements by
 
     Set WshShell = CreateObject("WScript.Shell") 
     
-WshShell.Run chr(34) & "name_of_the_file" & Chr(34), 0
+WshShell.Run chr(34) & "name_of_the_.bat_file" & Chr(34), 0
 
 Set WshShell = Nothing
 
