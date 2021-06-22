@@ -7,7 +7,7 @@ please install requirements by
 
 **pip install -r requirements.txt**
 
-#Tomake it automatically start
+**_To make it automatically start_**
 
 
 **DO THE FOLLOWING STEPS**
