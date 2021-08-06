@@ -1,3 +1,4 @@
 telepot
 pyscreenshot
 opencv-python
+pynput
