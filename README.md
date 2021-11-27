@@ -19,7 +19,7 @@ please install requirements by
    
    **python telegram_bot.py>>./tele_bot_log/logs.txt**
    
-   ***exit**
+   **exit**
    
    
  2. create a .vbs file in the same folder 
@@ -28,7 +28,7 @@ please install requirements by
     
     **WshShell.Run chr(34) & "name_of_the_.bat_file" & Chr(34), 0**
     
-    **Set WshShell = Nothing***
+    **Set WshShell = Nothing**
     
 
 3. copy the .vbs file 
