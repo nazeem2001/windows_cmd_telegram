@@ -12,7 +12,8 @@ please install requirements by
 
 **DO THE FOLLOWING STEPS**
 1. create a .bat file in the same folder  
-   with the following content 
+   with the following content
+   
    **@echo off**
    
    **cls**
