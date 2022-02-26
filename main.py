@@ -11,15 +11,16 @@ import requests
 from pynput.keyboard import Controller as key
 from pynput.keyboard import Key 
 
-admin_chat_id = '' #chat_id of admin in int form
+admin_chat_id = 1144964888 #chat_id of admin in int form
 admin_name= "Nazeemuddin basha"
-api_key="api key from bot father"
+api_key="1871970969:AAEHhZvlOniMEm5S0Uxy-cnkKiMsZB4W7pE"
 chat_id_file=0
 fin=''
 random_f=''
 fname=''
+fileMessageId = ''
 def replymessage(first_name,last_name,command,chat_id):
-    global auth_list, random, authorized, aut_chat_id, pending,logging,logger,key_list,chat_id_file,fin,fname
+    global auth_list, random, authorized, aut_chat_id, pending,logging,logger,key_list,chat_id_file,fin,fname,fileMessageId
     name = f'{first_name} {last_name}'
     print(name)
     print('Received:', command, 'chat_id', chat_id)
@@ -42,7 +43,7 @@ def replymessage(first_name,last_name,command,chat_id):
                 fin=""
                 telegram_bot.sendMessage(chat_id,f'file saved as {fname}')
                 fname=""
-                
+                fileMessageId="aa"
 
             elif ((list_command[0]=="screenshot") | (list_command[0]=="Screenshot")):
                 print("scr")
@@ -109,8 +110,10 @@ def replymessage(first_name,last_name,command,chat_id):
             telegram_bot.sendMessage(chat_id, 'sorry invalid code')
 
 def download_file(msg,key):
-    global fin,fname,pending,random_f,chat_id_file
+    global fin,fname,pending,random_f,chat_id_file,fileMessageId
     chat_id = msg['chat']['id']
+    fileMessageId=msg['message_id']
+    print(fileMessageId)
     chat_id_file=chat_id
     authorized = False
     if pending ==0 or chat_id !=aut_chat_id:
@@ -131,11 +134,20 @@ def download_file(msg,key):
         if key!=key_list[4]:
             fname=fp[fp.index('/')+1: ]
         fin=requests.get(url= f"https://api.telegram.org/file/bot{api_key}/{fp}",allow_redirects=True)
-        random_f = str(secrets.token_hex(32)).upper()
-        telegram_bot.sendMessage(chat_id, f'{admin_name} will tell you the authorization code')
-        telegram_bot.sendMessage( admin_chat_id ,f"do you want to recive {key} send a key to { msg['chat']['first_name']} {msg['chat']['last_name']} of ")
-        telegram_bot.sendMessage(admin_chat_id,random_f)
-
+        if chat_id!=admin_chat_id:        
+            random_f = str(secrets.token_hex(32)).upper()
+            telegram_bot.sendMessage(chat_id, f'{admin_name} will tell you the authorization code')
+            telegram_bot.sendMessage( admin_chat_id ,f"do you want to recive {key} send a key to { msg['chat']['first_name']} {msg['chat']['last_name']} of ")
+            telegram_bot.sendMessage(admin_chat_id,random_f)
+        else:
+            with open(f'downloads/{fname}',"wb") as f:
+                    f.write(fin.content)
+            chat_id_file=0
+            fin=""
+            telegram_bot.sendMessage(chat_id,f'file saved as {fname}')
+            fname=""
+            telegram_bot.deleteMessage(chat_id, fileMessageId)
+            fileMessageId="aa"
 key_list=["text","voice","photo","video","document"]
 file_found=False
 while not file_found:
@@ -202,5 +214,7 @@ telegram_bot = telepot.Bot(api_key)
 test_message()
 
 print(telegram_bot.getMe())#for internal testing
+MessageLoop(telegram_bot, action).run_as_thread()
+
 while 1:
     time.sleep(1)
