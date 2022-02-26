@@ -11,9 +11,9 @@ import requests
 from pynput.keyboard import Controller as key
 from pynput.keyboard import Key 
 
-admin_chat_id = 1144964888 #chat_id of admin in int form
+admin_chat_id = "" #chat_id of admin in int form
 admin_name= "Nazeemuddin basha"
-api_key="1871970969:AAEHhZvlOniMEm5S0Uxy-cnkKiMsZB4W7pE"
+api_key="api key"
 chat_id_file=0
 fin=''
 random_f=''
