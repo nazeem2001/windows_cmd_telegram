@@ -3,3 +3,4 @@ pyscreenshot
 opencv-python
 pynput
 pillow
+requests
