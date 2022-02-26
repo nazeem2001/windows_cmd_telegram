@@ -2,3 +2,4 @@ telepot
 pyscreenshot
 opencv-python
 pynput
+pillow
