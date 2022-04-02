@@ -1,7 +1,6 @@
 # windows_cmd_telegram
 
-"""
-please install requirements by
+"""please install requirements by
 """
 
 
