@@ -1,15 +1,19 @@
+from telepot.loop import MessageLoop
+import telepot
 import secrets
 import pyscreenshot
 import json
 from subprocess import *
 from urllib import request as open_web
-import time, datetime
+import time,
+import datetime
 import os
 import cv2
 from logger import *
 import requests
 from pynput.keyboard import Controller as key
 from pynput.keyboard import Key 
+import pyttsx3
 
 admin_chat_id = "" #chat_id of admin in int form
 admin_name= "Nazeemuddin basha"
@@ -19,6 +23,7 @@ fin=''
 random_f=''
 fname=''
 fileMessageId = ''
+
 
 def replymessage(first_name, last_name, command, chat_id):
     global auth_list, random, authorized, aut_chat_id, pending, logging, logger, key_list, chat_id_file, fin, fname, fileMessageId
