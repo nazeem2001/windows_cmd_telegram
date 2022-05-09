@@ -4,4 +4,4 @@ opencv-python
 pynput
 pillow
 requests
-pyperclip
+pyttsx3
