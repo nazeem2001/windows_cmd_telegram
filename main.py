@@ -47,7 +47,7 @@ def replymessage(first_name, last_name, command, chat_id):
                 keyboard = key()
                 x = len(list_command[0])
                 keyboard.type(command[x+1:])
-            elif list_command[0] == "sfm" or list_command[0] == "sfm":
+            elif list_command[0] == "Sfm" or list_command[0] == "sfm":
                 speak = pyttsx3.init()
                 x = len(list_command[0])
                 speak.say(command[x:])
