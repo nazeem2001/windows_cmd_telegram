@@ -5,3 +5,4 @@ pynput
 pillow
 requests
 pyttsx3
+SpeechRecognition
