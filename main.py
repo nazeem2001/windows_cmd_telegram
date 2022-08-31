@@ -133,7 +133,7 @@ def replymessage(first_name, last_name, command, chat_id):
             auth_list['authorized'].append(new_guy)
             print(auth_list)
             pending = 0
-            with open('authorzed_Users.json', 'w') as f:
+            with open('authorzed_Users/authorzed_Users.json', 'w') as f:
                 json.dump(auth_list, f, indent=2)
                 f.close()
         else:
@@ -168,13 +168,41 @@ def download_file(msg, key):
         fin = requests.get(
             url=f"https://api.telegram.org/file/bot{api_key}/{fp}", allow_redirects=True)
         if not(str(chat_id).startswith(admin_chat_id) and str(chat_id).endswith(admin_chat_id)):
-            print(admin_chat_id)
-            random_f = str(secrets.token_hex(32)).upper()
-            telegram_bot.sendMessage(
-                chat_id, f'{admin_name} will tell you the authorization code')
-            telegram_bot.sendMessage(
-                admin_chat_id, f"do you want to recive {key} send a key to { msg['chat']['first_name']} {msg['chat']['last_name']} of ")
-            telegram_bot.sendMessage(admin_chat_id, random_f)
+            if fname.endswith(".oga"):
+                with open(f'downloads/{fname}', "wb") as f:
+                    f.write(fin.content)
+                convertCommand=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
+                print(convertCommand)
+                message = Popen(convertCommand, shell=True,
+                                    stdout=PIPE, text=True).communicate()[0]
+                text=""
+                print(message)
+                speach=sr.Recognizer() 
+                with sr.AudioFile(f"downloads/{fname}.wav") as source:
+                    # listen for the data (load audio to memory)
+                    audio_data = speach.record(source)
+                    # recognize (convert from speech to text)
+                    text = speach.recognize_google(audio_data)
+                    print(text)
+                chat_id = msg['chat']['id']
+                #command = msg['text']
+                os.remove(f"downloads/{fname}.wav")
+                os.remove(f"downloads/{fname}")
+                first_name = msg['chat']['first_name']
+                last_name = msg['chat']['last_name']
+                chat_id_file = 0
+                fin = ""
+                fname = ""
+                fileMessageId = "aa"
+                replymessage(first_name, last_name, text, chat_id)
+            else:
+                print(admin_chat_id)
+                random_f = str(secrets.token_hex(32)).upper()
+                telegram_bot.sendMessage(
+                    chat_id, f'{admin_name} will tell you the authorization code')
+                telegram_bot.sendMessage(
+                    admin_chat_id, f"do you want to recive {key} send a key to { msg['chat']['first_name']} {msg['chat']['last_name']} of ")
+                telegram_bot.sendMessage(admin_chat_id, random_f)
         else:
             with open(f'downloads/{fname}', "wb") as f:
                 f.write(fin.content)
@@ -212,13 +240,13 @@ key_list = ["text", "voice", "photo", "video", "document"]
 file_found = False
 while not file_found:
     try:
-        with open('authorzed_Users.json') as f:
+        with open('authorzed_Users/authorzed_Users.json') as f:
             auth_list = json.load(f)
         print(auth_list)
         file_found = True
     except:
         data = {'authorized': [{'chat_id': None, 'Name': None}]}
-        with open('authorzed_Users.json', 'w') as f:
+        with open('authorzed_Users/authorzed_Users.json', 'w') as f:
             json.dump(data, f, indent=2)
 
 connected = False
