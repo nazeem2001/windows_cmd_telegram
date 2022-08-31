@@ -1,3 +1,3 @@
-/authorzed_Users/**
+/authorzed_Users/*.json
 /.env
 /__pycache__
