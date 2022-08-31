@@ -1,27 +1,32 @@
+from distutils import text_file
+from re import T
 from telepot.loop import MessageLoop
+from dotenv import load_dotenv
+
 import telepot
 import secrets
 import pyscreenshot
 import json
-from subprocess import *
+from subprocess import run, Popen,PIPE
 from urllib import request as open_web
-import time,
+import time
 import datetime
 import os
 import cv2
 from logger import *
 import requests
 from pynput.keyboard import Controller as key
-from pynput.keyboard import Key 
+import speech_recognition as sr
 import pyttsx3
-
-admin_chat_id = "" #chat_id of admin in int form
-admin_name= "Nazeemuddin basha"
-api_key="api key"
-chat_id_file=0
-fin=''
-random_f=''
-fname=''
+load_dotenv()
+admin_chat_id = os.getenv("ADMIN_CHAT_ID")  # chat_id of admin in int form
+admin_name = os.getenv("ADMIN_NAME")
+api_key = os.getenv("API_KEY")
+print(admin_chat_id, api_key, admin_name)
+chat_id_file = 0
+fin = ''
+random_f = ''
+fname = ''
 fileMessageId = ''
 
 
@@ -40,14 +45,15 @@ def replymessage(first_name, last_name, command, chat_id):
         if authorized:
             list_command = command.split()
             if list_command[0] == "Send" or list_command[0] == "send":
-                if chat_id==admin_chat_id:
+                if chat_id == admin_chat_id:
                     x = len(list_command[0])
-                    telegram_bot.sendDocument(chat_id, open(command[x+1:], 'rb'))
+                    telegram_bot.sendDocument(
+                        chat_id, open(command[x+1:], 'rb'))
             elif list_command[0] == "types" or list_command[0] == "Types":
                 keyboard = key()
                 x = len(list_command[0])
                 keyboard.type(command[x+1:])
-            elif list_command[0] == "Sfm" or list_command[0] == "sfm":
+            elif list_command[0] == "Speak" or list_command[0] == "speak":
                 speak = pyttsx3.init()
                 x = len(list_command[0])
                 speak.say(command[x:])
@@ -135,7 +141,7 @@ def replymessage(first_name, last_name, command, chat_id):
 
 
 def download_file(msg, key):
-    global fin, fname, pending, random_f, chat_id_file, fileMessageId
+    global fin, fname, pending, random_f, chat_id_file, fileMessageId, admin_chat_id
     chat_id = msg['chat']['id']
     fileMessageId = msg['message_id']
     print(fileMessageId)
@@ -161,7 +167,8 @@ def download_file(msg, key):
             fname = fp[fp.index('/')+1:]
         fin = requests.get(
             url=f"https://api.telegram.org/file/bot{api_key}/{fp}", allow_redirects=True)
-        if chat_id != admin_chat_id:
+        if not(str(chat_id).startswith(admin_chat_id) and str(chat_id).endswith(admin_chat_id)):
+            print(admin_chat_id)
             random_f = str(secrets.token_hex(32)).upper()
             telegram_bot.sendMessage(
                 chat_id, f'{admin_name} will tell you the authorization code')
@@ -171,11 +178,33 @@ def download_file(msg, key):
         else:
             with open(f'downloads/{fname}', "wb") as f:
                 f.write(fin.content)
+            if fname.endswith(".oga"):
+                convertCommand=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
+                print(convertCommand)
+                message = Popen(convertCommand, shell=True,
+                                    stdout=PIPE, text=True).communicate()[0]
+                text=""
+                print(message)
+                speach=sr.Recognizer() 
+                with sr.AudioFile(f"downloads/{fname}.wav") as source:
+                    # listen for the data (load audio to memory)
+                    audio_data = speach.record(source)
+                    # recognize (convert from speech to text)
+                    text = speach.recognize_google(audio_data)
+                    print(text)
+                chat_id = msg['chat']['id']
+                #command = msg['text']
+                os.remove(f"downloads/{fname}.wav")
+                os.remove(f"downloads/{fname}")
+                first_name = msg['chat']['first_name']
+                last_name = msg['chat']['last_name']
+                replymessage(first_name, last_name, text, chat_id)
+                
             chat_id_file = 0
             fin = ""
             telegram_bot.sendMessage(chat_id, f'file saved as {fname}')
             fname = ""
-            telegram_bot.deleteMessage(chat_id, fileMessageId)
+            
             fileMessageId = "aa"
 
 
