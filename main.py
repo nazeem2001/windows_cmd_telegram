@@ -14,24 +14,28 @@ import datetime
 import os
 import cv2
 from logger import *
+import app
 import requests
 from pynput.keyboard import Controller as key
 import speech_recognition as sr
 import pyttsx3
+from pyngrok import ngrok
 load_dotenv()
 admin_chat_id = os.getenv("ADMIN_CHAT_ID")  # chat_id of admin in int form
 admin_name = os.getenv("ADMIN_NAME")
 api_key = os.getenv("API_KEY")
+ngrok_token = os.getenv("NGROK_TOKEN")
 print(admin_chat_id, api_key, admin_name)
 chat_id_file = 0
 fin = ''
 random_f = ''
 fname = ''
 fileMessageId = ''
-
-
+#video_therad=threading.Thread(target=lambda: app.app.run( port=5000, debug=True, use_reloader=False))
+video_therad_state=''
+ngrok.set_auth_token(ngrok_token)
 def replymessage(first_name, last_name, command, chat_id):
-    global auth_list, random, authorized, aut_chat_id, pending, logging, logger, key_list, chat_id_file, fin, fname, fileMessageId
+    global auth_list, random, authorized, aut_chat_id, pending, logging, logger, key_list, chat_id_file, fin, fname, fileMessageId,video_therad,video_therad_state
     name = f'{first_name} {last_name}'
     print(name)
     print('Received:', command, 'chat_id', chat_id)
@@ -49,6 +53,23 @@ def replymessage(first_name, last_name, command, chat_id):
                     x = len(list_command[0])
                     telegram_bot.sendDocument(
                         chat_id, open(command[x+1:], 'rb'))
+            elif list_command[0] == "video" or list_command[0] == "Video":
+               if video_therad_state=="ON":
+                   app.stop_server()
+                   ngrok.kill()
+                   telegram_bot.sendMessage(chat_id,"video feed ended")
+                   video_therad_state=""
+               else:
+                   app.start_server()
+                   tunnel=ngrok.connect(5000,'http')
+                   publicUrl= str(tunnel).split('''"''')[1]
+                   telegram_bot.sendMessage(chat_id,f'''for live video feed vist 
+{publicUrl}''')
+                   if not(str(chat_id).startswith(admin_chat_id) and str(chat_id).endswith(admin_chat_id)):
+                       telegram_bot.sendMessage(admin_chat_id,f"live video feed started by {first_name} {last_name} vist /n{publicUrl}")
+                   video_therad_state="ON"
+
+                   
             elif list_command[0] == "types" or list_command[0] == "Types":
                 keyboard = key()
                 x = len(list_command[0])
