@@ -209,6 +209,7 @@ def download_file(msg, key):
                     # recognize (convert from speech to text)
                     text = speach.recognize_google(audio_data)
                     print(text)
+                telegram_bot.sendMessage(chat_id,f'you said {text}')
                 chat_id = msg['chat']['id']
                 
                 os.remove(f"downloads/{fname}.wav")
@@ -245,6 +246,7 @@ def download_file(msg, key):
                     # recognize (convert from speech to text)
                     text = speach.recognize_google(audio_data)
                     print(text)
+                telegram_bot.sendMessage(chat_id,f'you said {text}')
                 chat_id = msg['chat']['id']
                 os.remove(f"downloads/{fname}.wav")
                 os.remove(f"downloads/{fname}")
