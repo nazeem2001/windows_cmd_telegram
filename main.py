@@ -203,17 +203,26 @@ def download_file(msg, key):
                 text=""
                 print(message)
                 speach=sr.Recognizer() 
-                with sr.AudioFile(f"downloads/{fname}.wav") as source:
-                    # listen for the data (load audio to memory)
-                    audio_data = speach.record(source)
-                    # recognize (convert from speech to text)
-                    text = speach.recognize_google(audio_data)
-                    print(text)
-                telegram_bot.sendMessage(chat_id,f'you said {text}')
-                chat_id = msg['chat']['id']
-                
+                try:
+                    with sr.AudioFile(f"downloads/{fname}.wav") as source:
+                        # listen for the data (load audio to memory)
+                        audio_data = speach.record(source)
+                        # recognize (convert from speech to text)
+                        
+                        text = speach.recognize_google(audio_data)
+                except sr.UnknownValueError:
+                    telegram_bot.sendMessage(chat_id,f"Didn't get what you said")
+                    source.close()
+                    os.remove(f"downloads/{fname}.wav")
+                    os.remove(f"downloads/{fname}")
+                    print('deleted')
+                    return
                 os.remove(f"downloads/{fname}.wav")
                 os.remove(f"downloads/{fname}")
+                print('deleted')
+                print(text)
+                telegram_bot.sendMessage(chat_id,f'you said {text}')
+                chat_id = msg['chat']['id']
                 first_name = msg['chat']['first_name']
                 last_name = msg['chat']['last_name']
                 chat_id_file = 0
@@ -240,16 +249,25 @@ def download_file(msg, key):
                 text=""
                 print(message)
                 speach=sr.Recognizer() 
-                with sr.AudioFile(f"downloads/{fname}.wav") as source:
-                    # listen for the data (load audio to memory)
-                    audio_data = speach.record(source)
-                    # recognize (convert from speech to text)
-                    text = speach.recognize_google(audio_data)
-                    print(text)
-                telegram_bot.sendMessage(chat_id,f'you said {text}')
-                chat_id = msg['chat']['id']
+                try:
+                    with sr.AudioFile(f"downloads/{fname}.wav") as source:
+                        # listen for the data (load audio to memory)
+                        audio_data = speach.record(source)
+                        # recognize (convert from speech to text)
+                    
+                        text = speach.recognize_google(audio_data)
+                except sr.UnknownValueError:
+                    telegram_bot.sendMessage(chat_id,f"Didn't get what you said")
+                    os.remove(f"downloads/{fname}.wav")
+                    os.remove(f"downloads/{fname}")
+                    print('deleted')
+                    return
                 os.remove(f"downloads/{fname}.wav")
                 os.remove(f"downloads/{fname}")
+                print('deleted')
+                print(text)
+                telegram_bot.sendMessage(chat_id,f'you said {text}')
+                chat_id = msg['chat']['id']
                 first_name = msg['chat']['first_name']
                 last_name = msg['chat']['last_name']
                 replymessage(first_name, last_name, text, chat_id)
