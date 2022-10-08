@@ -31,11 +31,10 @@ def gen_frames():  # generate frame by frame from camera
     global cam_on,camera
     while True:
         # Capture frame-by-frame
-        print(cam_on)
         success, frame = camera.read()  # read the camera frame
-        print((not success) and (not cam_on))
+
         if (not success) or (not cam_on):
-            print("kksjjkal")
+            print("cam relaesed")
             camera.release()
             camera=cv2.VideoCapture(0) # use 0 for web camera
             break
