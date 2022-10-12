@@ -24,10 +24,11 @@
     window.onbeforeunload = closingCode;
 async function closingCode(){
    // do something...
+   alert("bye");
    res=await fetch(`${window.location.origin}/end-video`)
    console.log(res)
-   //alert("bye");
-   return null;
+   
+   return false;
 }
 </script>
 </body>
