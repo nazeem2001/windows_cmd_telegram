@@ -2,9 +2,11 @@ telepot
 pyscreenshot
 opencv-python
 pynput
+pyperclip
 pillow
 requests
 pyttsx3
 SpeechRecognition
 flask
 pyngrok
+python-dotenv
