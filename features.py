@@ -1,10 +1,7 @@
 import live_webserver as lw
 import os
-from distutils import text_file
-from re import T
 from telepot.loop import MessageLoop
 from dotenv import load_dotenv
-
 import telepot
 import secrets
 import pyscreenshot
@@ -67,7 +64,7 @@ class features:
     def send(self,fp ,chat_id):
         self.telegram_bot.sendDocument(chat_id, open(fp, 'rb'))
 
-    def live_video(self,chat_id):
+    def live_video(self,chat_id,first_name ,last_name):
     
         if self.video_therad_state=="ON":
             lw.stop_server()
@@ -79,10 +76,10 @@ class features:
             tunnel=ngrok.connect(5000,'http')
             public_url= str(tunnel).split('''"''')[1]
             self.telegram_bot.sendMessage(chat_id,f'''for live video feed vist 
-    {public_url}''')
+{public_url}''')
             if not(str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)): 
-                self.telegram_bot.sendMessage(self.admin_chat_id,f'''live video feed started by {self.first_name} {last_name} vist 
-    {public_url}''')
+                self.telegram_bot.sendMessage(self.admin_chat_id,f'''live video feed started by {first_name} {last_name} vist 
+{public_url}''')
             self.video_therad_state="ON"
     def download_file(self,msg, key):
         key_list = ["text", "voice", "photo", "video", "document"]
@@ -111,11 +108,13 @@ class features:
                 fname = fp[fp.index('/')+1:]
             self.fin = requests.get(
                 url=f"https://api.telegram.org/file/bot{self.api_key}/{fp}", allow_redirects=True)
+            speach_recon=False
             if not(str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
                 if fname.endswith(".oga"):
                     with open(f'downloads/{fname}', "wb") as f:
                         f.write(self.fin.content)  
-                    self.recognise_speech_and_do(msg,fname)
+                    speach_recon,text=self.recognise_speech_and_do(chat_id,fname)
+                    return speach_recon,text
                 else:
                     print(self.admin_chat_id)
                     random_f = str(secrets.token_hex(32)).upper()
@@ -125,18 +124,21 @@ class features:
                         self.admin_chat_id, f"do you want to recive {key} send a key to { msg['chat']['first_name']} {msg['chat']['last_name']} of ")
                     self.telegram_bot.sendMessage(self.admin_chat_id, random_f)
             else:
+                text=''
                 with open(f'downloads/{fname}', "wb") as f:
                     f.write(self.fin.content)    
                 if fname.endswith(".oga"):
-                    self.recognise_speech_and_do(msg,fname)  
+                    speach_recon,text=self.recognise_speech_and_do(chat_id,fname)  
+                    
                 self.chat_id_file = 0
                 self.fin = ""
                 self.telegram_bot.sendMessage(chat_id, f'file saved as {fname}')
                 fname = ""
                 
                 self.fileMessageId = "aa"
+                return speach_recon,text
 
-    def recognise_speech_and_do(self,msg,fname):
+    def recognise_speech_and_do(self,chat_id,fname):
         
         convert_command=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
         print(convert_command)
@@ -150,11 +152,10 @@ class features:
                 # listen for the data (load audio to memory)
                 audio_data = speach.record(source)
                 # recognize (convert from speech to text)
-                
                 text = speach.recognize_google(audio_data)
         except sr.UnknownValueError:
             self.telegram_bot.sendMessage(chat_id,f"Didn't get what you said")
-            source.close()
+            
             os.remove(f"downloads/{fname}.wav")
             os.remove(f"downloads/{fname}")
             print('deleted')
@@ -163,15 +164,12 @@ class features:
         os.remove(f"downloads/{fname}")
         print('deleted')
         print(text)
-        chat_id = msg['chat']['id']
         self.telegram_bot.sendMessage(chat_id,f'you said {text}')
-        first_name = msg['chat']['first_name']
-        last_name = msg['chat']['last_name']
         self.chat_id_file = 0
         self.fin = ""
         fname = ""
         self.fileMessageId = "aa"
-        replymessage(first_name, last_name, text, chat_id)
+        return True,text
     def speak(self ,command):
         speak = pyttsx3.init()
         list_command= command.split()
@@ -242,3 +240,18 @@ class features:
         self.aut_chat_id = chat_id
         self.pending = 1
         print(self.pending, self.aut_chat_id)
+    def receive_auth_code(self,name ,chat_id,command):
+        print(self.random)
+        if command == self.random:
+            self.telegram_bot.sendMessage(
+                chat_id, str('you are authorized ' + name))
+            new_guy = {'chat_id': chat_id, 'Name': name}
+            print(new_guy)
+            self.auth_list['authorized'].append(new_guy)
+            print(self.auth_list)
+            self.pending = 0
+            with open(self.authorzed_Users, 'w') as f:
+                json.dump(self.auth_list, f, indent=2)
+                f.close()
+        else:
+            self.telegram_bot.sendMessage(chat_id, 'sorry invalid code')

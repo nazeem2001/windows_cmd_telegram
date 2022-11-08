@@ -1,25 +1,10 @@
-from distutils import text_file
-from re import T
 from telepot.loop import MessageLoop
 from dotenv import load_dotenv
-
-import telepot
-import secrets
-import pyscreenshot
-import json
+import os
 from subprocess import run, Popen,PIPE
+import telepot
 from urllib import request as open_web
 import time
-import datetime
-import os
-import cv2
-from logger import Listener,key_handeler   
-import live_webserver
-import requests
-from pynput.keyboard import Controller as key
-import speech_recognition as sr
-import pyttsx3
-from pyngrok import ngrok
 import features
 load_dotenv()
 api_key = os.getenv("API_KEY")
@@ -27,6 +12,7 @@ telegram_bot = telepot.Bot(api_key)
 feature =features.features(telegram_bot)
 
 telegram_bot = telepot.Bot(api_key)
+
 def replymessage(first_name, last_name, command, chat_id):
    
     name = f'{first_name} {last_name}'
@@ -46,7 +32,7 @@ def replymessage(first_name, last_name, command, chat_id):
                     x = len(list_command[0])
                     feature.send(command[x+1:],chat_id)
             elif list_command[0] == "video" or list_command[0] == "Video":
-               feature.live_video(chat_id)
+               feature.live_video(chat_id,first_name,last_name)
             elif list_command[0] == "types" or list_command[0] == "Types":
                 feature.keyboard_type(command)
             elif list_command[0] == "Speak" or list_command[0] == "speak":
@@ -70,21 +56,7 @@ def replymessage(first_name, last_name, command, chat_id):
         else:
             feature.send_first_auth_code(chat_id,name)
     else:
-        print(feature.random)
-        if command == feature.random:
-            telegram_bot.sendMessage(
-                chat_id, str('you are authorized ' + name))
-            new_guy = {'chat_id': chat_id, 'Name': name}
-            print(new_guy)
-            feature.auth_list['authorized'].append(new_guy)
-            print(feature.auth_list)
-            feature.pending = 0
-            with open(feature.authorzed_Users, 'w') as f:
-                json.dump(feature.auth_list, f, indent=2)
-                f.close()
-        else:
-            telegram_bot.sendMessage(chat_id, 'sorry invalid code')
-
+        feature.receive_auth_code(name,chat_id,command)
 
 
 
@@ -119,8 +91,9 @@ def action(msg):
     if key == "text":
         replymessage(first_name, last_name, command, chat_id)
     if key in key_list[1:]:
-        feature.download_file(msg, key)
-
+        speach_recon ,command=feature.download_file(msg, key)
+        if speach_recon is True:
+            replymessage(first_name, last_name, command, chat_id)
 
 
 feature.test_message()
