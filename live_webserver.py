@@ -4,6 +4,7 @@ import cv2
 from pyngrok import ngrok
 from werkzeug.serving import make_server
 import threading
+import pyaudio
 app = Flask(__name__)
 
 camera = cv2.VideoCapture(0)
@@ -27,6 +28,32 @@ class ServerThread(threading.Thread):
         camera.release()
         self.server.shutdown()
 cam_on=False
+def gen_header(sampleRate, bitsPerSample, channels, samples):
+    datasize = 10240000 # Some veeery big number here instead of: #samples * channels * bitsPerSample // 8
+    o = bytes("RIFF",'ascii')                                               # (4byte) Marks file as RIFF
+    o += (datasize + 36).to_bytes(4,'little')                               # (4byte) File size in bytes excluding this and RIFF marker
+    o += bytes("WAVE",'ascii')                                              # (4byte) File type
+    o += bytes("fmt ",'ascii')                                              # (4byte) Format Chunk Marker
+    o += (16).to_bytes(4,'little')                                          # (4byte) Length of above format data
+    o += (1).to_bytes(2,'little')                                           # (2byte) Format type (1 - PCM)
+    o += (channels).to_bytes(2,'little')                                    # (2byte)
+    o += (sampleRate).to_bytes(4,'little')                                  # (4byte)
+    o += (sampleRate * channels * bitsPerSample // 8).to_bytes(4,'little')  # (4byte)
+    o += (channels * bitsPerSample // 8).to_bytes(2,'little')               # (2byte)
+    o += (bitsPerSample).to_bytes(2,'little')                               # (2byte)
+    o += bytes("data",'ascii')                                              # (4byte) Data Chunk Marker
+    o += (datasize).to_bytes(4,'little')                                    # (4byte) Data size in bytes
+    return o
+
+FORMAT = pyaudio.paInt16
+CHUNK = 1024 #1024
+RATE = 44100
+bitsPerSample = 16 #16
+CHANNELS = 1
+wav_header = gen_header(RATE, bitsPerSample, CHANNELS, CHUNK)
+audio = pyaudio.PyAudio()
+stream=''
+
 def gen_frames():  # generate frame by frame from camera
     global cam_on,camera
     while True:
@@ -60,9 +87,26 @@ def end_video():
 @app.route('/')
 def index():
     """Video streaming home page."""
-    global cam_on
+    global cam_on, stream
     cam_on=True
+    stream = audio.open(format=FORMAT, channels=CHANNELS,
+                rate=RATE, input=True,input_device_index = 1,
+                frames_per_buffer=CHUNK)
+
     return render_template('index.html')
+@app.route('/audio_unlim')
+def audio_unlim():
+    # start Recording
+    def sound():
+        data = wav_header
+        data += stream.read(CHUNK)
+        yield(data)
+        while True:
+            data = stream.read(CHUNK)
+            yield(data)
+
+    return Response(sound(), mimetype="audio/x-wav")
+
 def start_server():
     global server
     # App routes defined here
@@ -73,3 +117,5 @@ def start_server():
 def stop_server():
     global server
     server.shutdown()
+if __name__=="__main__":
+    start_server()
