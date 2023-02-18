@@ -105,24 +105,26 @@ class features:
             resp = resp.json()
             fp = resp["result"]["file_path"]
             if key != key_list[4]:
-                fname = fp[fp.index('/')+1:]
+                self.fname = fp[fp.index('/')+1:]
             self.fin = requests.get(
                 url=f"https://api.telegram.org/file/bot{self.api_key}/{fp}", allow_redirects=True)
             speach_recon=False
             if not(str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
-                if fname.endswith(".oga"):
-                    with open(f'downloads/{fname}', "wb") as f:
+                if self.fname.endswith(".oga"):
+                    with open(f'downloads/{self.fname}', "wb") as f:
                         f.write(self.fin.content)  
-                    speach_recon,text=self.recognise_speech_and_do(chat_id,fname)
+                    speach_recon,text=self.recognise_speech_and_do(chat_id,self.fname)
                     return speach_recon,text
                 else:
                     print(self.admin_chat_id)
-                    random_f = str(secrets.token_hex(32)).upper()
+                    self.random_f = str(secrets.token_hex(32)).upper()
+                    text=''
                     self.telegram_bot.sendMessage(
                         chat_id, f'{self.admin_name} will tell you the authorization code')
                     self.telegram_bot.sendMessage(
                         self.admin_chat_id, f"do you want to recive {key} send a key to { msg['chat']['first_name']} {msg['chat']['last_name']} of ")
-                    self.telegram_bot.sendMessage(self.admin_chat_id, random_f)
+                    self.telegram_bot.sendMessage(self.admin_chat_id, self.random_f)
+                    return speach_recon,text
             else:
                 text=''
                 with open(f'downloads/{fname}', "wb") as f:
@@ -176,14 +178,14 @@ class features:
         x = len(list_command[0])
         speak.say(command[x:])
         speak.runAndWait()
-    def save_file_in_fin(self,chat_id,fname):
-        with open(f'downloads/{fname}', "wb") as f:
+    def save_file_in_fin(self,chat_id):
+        with open(f'downloads/{self.fname}', "wb") as f:
             f.write(self.fin.content)
         self.chat_id_file = 0
         self.fin = ""
-        self.telegram_bot.sendMessage(chat_id, f'file saved as {fname}')
-        fname = ""
-        fileMessageId = "aa"
+        self.telegram_bot.sendMessage(chat_id, f'file saved as {self.fname}')
+        self.fname = ""
+        self.fileMessageId = "aa"
     def take_screenshot(self ,chat_id):
         print("scr")
         img = pyscreenshot.grab()
