@@ -10,3 +10,4 @@ SpeechRecognition
 flask
 pyngrok
 python-dotenv
+pyaudio
