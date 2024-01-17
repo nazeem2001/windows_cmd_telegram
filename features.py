@@ -107,6 +107,9 @@ class features:
             resp = requests.get(
                 url=f"https://api.telegram.org/bot{self.api_key}/getFile?file_id={fid}")
             resp = resp.json()
+            if resp["ok"]==False:
+                self.telegram_bot.sendMessage(chat_id, resp["description"])
+                return False,""
             fp = resp["result"]["file_path"]
             if key != key_list[4]:
                 self.fname = fp[fp.index('/')+1:]
