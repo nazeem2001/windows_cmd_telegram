@@ -24,6 +24,7 @@ class features:
         self.api_key = os.getenv("API_KEY")
         self.admin_name = os.getenv("ADMIN_NAME")
         self.ngrok_token = os.getenv("NGROK_TOKEN")
+        self.pronoun=os.getenv("PRONOUN")
         self.chat_id_file = 0
         self.photo_name='photo.png'
         self.authorzed_users='authorzed_Users/authorzed_Users.json'
@@ -247,7 +248,7 @@ here is log''')
         self.telegram_bot.sendMessage(
             chat_id, f'you are not a authorized user please contact {self.admin_name}')
         self.telegram_bot.sendMessage(
-            chat_id, 'He will tell you the authorization code')
+            chat_id, f'{self.pronoun} will tell you the authorization code')
         self.aut_chat_id = chat_id
         self.pending = 1
         print(self.pending, self.aut_chat_id)
