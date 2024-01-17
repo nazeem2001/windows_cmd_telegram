@@ -24,6 +24,8 @@ class features:
         self.api_key = os.getenv("API_KEY")
         self.admin_name = os.getenv("ADMIN_NAME")
         self.ngrok_token = os.getenv("NGROK_TOKEN")
+        self.pronoun=os.getenv("PRONOUN")
+        self.ffmpegPathPrefix=os.getenv("FFMPEG_PATH_PREFIX")
         self.chat_id_file = 0
         self.photo_name='photo.png'
         self.authorzed_users='authorzed_Users/authorzed_Users.json'
@@ -144,7 +146,7 @@ class features:
 
     def recognise_speech_and_do(self,chat_id,fname,name):
         
-        convert_command=f'C:/tweakes/bin/ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
+        convert_command=f'{self.ffmpegPathPrefix}ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
         print(convert_command)
         message = Popen(convert_command, shell=True,
                             stdout=PIPE, text=True).communicate()[0]
@@ -247,7 +249,7 @@ here is log''')
         self.telegram_bot.sendMessage(
             chat_id, f'you are not a authorized user please contact {self.admin_name}')
         self.telegram_bot.sendMessage(
-            chat_id, 'He will tell you the authorization code')
+            chat_id, f'{self.pronoun} will tell you the authorization code')
         self.aut_chat_id = chat_id
         self.pending = 1
         print(self.pending, self.aut_chat_id)
