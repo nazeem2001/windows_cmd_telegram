@@ -3,11 +3,13 @@ pyscreenshot
 opencv-python
 pynput
 pyperclip
-pillow
+pillow>=10.2*
 requests
+aiohttp>3.9.2
 pyttsx3
 SpeechRecognition
 flask
 pyngrok
 python-dotenv
 pyaudio
+jinja2>=3.1.3

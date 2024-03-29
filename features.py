@@ -1,14 +1,11 @@
+from werkzeug.utils import safe_join
 import live_webserver as lw
 import os
-from telepot.loop import MessageLoop
 from dotenv import load_dotenv
-import telepot
 import secrets
 import pyscreenshot
 import json
-from subprocess import run, Popen, PIPE
-from urllib import request as open_web
-import time
+from subprocess import Popen, PIPE
 import datetime
 import cv2
 from logger import Listener, key_handeler
@@ -83,10 +80,10 @@ class features:
             lw.start_server()
             tunnel = ngrok.connect(5000, 'http')
             public_url = str(tunnel).split('''"''')[1]
-            self.telegram_bot.sendMessage(chat_id, f'''for live video feed vist 
+            self.telegram_bot.sendMessage(chat_id, f'''for live video feed vist
 {public_url}''')
             if not (str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
-                self.telegram_bot.sendMessage(self.admin_chat_id, f'''live video feed started by {first_name} {last_name} vist 
+                self.telegram_bot.sendMessage(self.admin_chat_id, f'''live video feed started by {first_name} {last_name} vist
 {public_url}''')
             self.video_therad_state = "ON"
 
@@ -123,10 +120,10 @@ class features:
             speach_recon = False
             if not (str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
                 if self.fname.endswith(".oga"):
-                    with open(f'downloads/{self.fname}', "wb") as f:
+                    with open(safe_join('downloads', self.fname), "wb") as f:
                         f.write(self.fin.content)
                     speach_recon, text = self.recognise_speech_and_do(
-                        chat_id, self.fname, f"{msg['chat']['first_name'] } {msg['chat']['last_name']}")
+                        chat_id, self.fname, f"{msg['chat']['first_name']} {msg['chat']['last_name']}")
                     return speach_recon, text
                 else:
                     print(self.admin_chat_id)
@@ -135,17 +132,17 @@ class features:
                     self.telegram_bot.sendMessage(
                         chat_id, f'{self.admin_name} will tell you the authorization code')
                     self.telegram_bot.sendMessage(
-                        self.admin_chat_id, f"do you want to recive {key} send a key to { msg['chat']['first_name']} {msg['chat']['last_name']} of ")
+                        self.admin_chat_id, f"do you want to recive {key} send a key to {msg['chat']['first_name']} {msg['chat']['last_name']} of ")
                     self.telegram_bot.sendMessage(
                         self.admin_chat_id, self.random_f)
                     return speach_recon, text
             else:
                 text = ''
-                with open(f'downloads/{self.fname}', "wb") as f:
+                with open(safe_join('downloads', self.fname), "wb") as f:
                     f.write(self.fin.content)
                 if self.fname.endswith(".oga"):
                     speach_recon, text = self.recognise_speech_and_do(
-                        chat_id, self.fname, f"{msg['chat']['first_name'] } {msg['chat']['last_name']}")
+                        chat_id, self.fname, f"{msg['chat']['first_name']} {msg['chat']['last_name']}")
 
                 self.chat_id_file = 0
                 self.fin = ""
@@ -158,7 +155,8 @@ class features:
 
     def recognise_speech_and_do(self, chat_id, fname, name):
 
-        convert_command = f'{self.ffmpegPathPrefix}ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
+        convert_command = f'{
+            self.ffmpegPathPrefix}ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
         print(convert_command)
         message = Popen(convert_command, shell=True,
                         stdout=PIPE, text=True).communicate()[0]
@@ -198,7 +196,7 @@ class features:
         speak.runAndWait()
 
     def save_file_in_fin(self, chat_id):
-        with open(f'downloads/{self.fname}', "wb") as f:
+        with open(safe_join('downloads', self.fname), "wb") as f:
             f.write(self.fin.content)
         self.chat_id_file = 0
         self.fin = ""
