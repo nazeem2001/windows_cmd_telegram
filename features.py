@@ -34,8 +34,9 @@ class features:
         self.random_f = ''
         self.fname = ''
         self.file_message_id = ''
-        self.video_therad_state = ''
+        self.server_thread_state = ''
         self.random = 1
+        self.public_url=''
         self.now = datetime.datetime.now()
         self.authorized = 0
         self.aut_chat_id = 0
@@ -44,6 +45,8 @@ class features:
         self.logger = 0
         self.telegram_bot = telegram_bot
         file_found = False
+        self.screen_State=False
+        self.video_State=False
         while not file_found:
             try:
                 with open(self.authorzed_users) as f:
@@ -62,30 +65,57 @@ class features:
                            text=True).communicate()[0]
             self.telegram_bot.sendMessage(self.admin_chat_id, messag)
             i = i - 1
-
-    def send(self, fp, chat_id):
-        self.telegram_bot.sendDocument(chat_id, open(fp, 'rb'))
-
-    def live_video(self, chat_id, first_name, last_name):
-
-        if self.video_therad_state == "ON":
+    def live_server(self, chat_id, first_name, last_name):
+        if self.server_thread_state == "ON" and not self.video_State and not self.screen_State:
             lw.stop_server()
             ngrok.kill()
             self.telegram_bot.sendMessage(chat_id, "video feed ended")
-            self.video_therad_state = ""
+            self.server_thread_state = ""
             if not (str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
                 self.telegram_bot.sendMessage(
                     self.admin_chat_id, f'''live video feed stopped by {first_name} {last_name}.''')
         else:
-            lw.start_server()
+            lw.start_server_in_thread()
             tunnel = ngrok.connect(5000, 'http')
-            public_url = str(tunnel).split('''"''')[1]
+            self.public_url = str(tunnel).split('''"''')[1]
+            self.server_thread_state = "ON"
+        return None
+       
+
+    def send(self, fp, chat_id):
+        self.telegram_bot.sendDocument(chat_id, open(fp, 'rb'))
+    def video(self,chat_id,first_name,last_name):
+        self.video_State=not self.video_State
+        if self.video_State:
+            if self.server_thread_state!="ON":
+                _=self.live_server(chat_id,first_name,last_name)
             self.telegram_bot.sendMessage(chat_id, f'''for live video feed vist
-{public_url}''')
+{self.public_url}''')
             if not (str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
                 self.telegram_bot.sendMessage(self.admin_chat_id, f'''live video feed started by {first_name} {last_name} vist
-{public_url}''')
-            self.video_therad_state = "ON"
+{self.public_url}''')
+        else:
+            if not self.screen_State and not self.video_State:
+                self.live_server(chat_id,first_name,last_name) 
+            else:
+                self.telegram_bot.sendMessage(chat_id,'Cannot stop server as other services are running on the server')
+
+    def screen(self,chat_id,first_name,last_name):
+        self.screen_State=not self.screen_State
+        if self.screen_State:
+            if self.server_thread_state!="ON":
+                self.live_server(chat_id,first_name,last_name)
+            
+            self.telegram_bot.sendMessage(chat_id, f'''for live Screen feed vist
+{self.public_url}/screen''')
+            if not (str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
+                self.telegram_bot.sendMessage(self.admin_chat_id, f'''live Screen feed started by {first_name} {last_name} vist
+{self.public_url}/screen''')
+        else:
+            if not self.screen_State and not self.video_State:
+                self.live_server(chat_id,first_name,last_name) 
+            else:
+                self.telegram_bot.sendMessage(chat_id,'Cannot stop server as other services are running on the server')
 
     def download_file(self, msg, key):
         key_list = ["text", "voice", "photo", "video", "document"]
@@ -155,8 +185,7 @@ class features:
 
     def recognise_speech_and_do(self, chat_id, fname, name):
 
-        convert_command = f'{
-            self.ffmpegPathPrefix}ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
+        convert_command = f'{self.ffmpegPathPrefix}ffmpeg -y -i downloads/{fname} downloads/{fname}.wav'
         print(convert_command)
         message = Popen(convert_command, shell=True,
                         stdout=PIPE, text=True).communicate()[0]
