@@ -1,38 +1,26 @@
-from sre_constants import SUCCESS
 from flask import Flask, render_template, Response
 import cv2
+import numpy as np
 from pyngrok import ngrok
+import pyscreenshot
 from werkzeug.serving import make_server
 import threading
+import time
+import requests
 import pyaudio
+import base64
+from flask_socketio import SocketIO,emit
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 camera = cv2.VideoCapture(0)
 #  for cctv camera use rtsp://username:password@ip_address:554/user=username_password='password'_channel=channel_number_stream=0.sdp' instead of camera
 # for local webcam use cv2.VideoCapture(0)
 
 
-class ServerThread(threading.Thread):
-
-    def __init__(self, app):
-        threading.Thread.__init__(self)
-        self.server = make_server('127.0.0.1', 5000, app)
-        self.ctx = app.app_context()
-        self.ctx.push()
-
-    def run(self):
-        print('starting server')
-        self.server.serve_forever()
-
-    def shutdown(self):
-        print("server stop")
-        camera.release()
-        self.server.shutdown()
-
-
 cam_on = False
 
-
+count=0
 def gen_header(sampleRate, bitsPerSample, channels, samples):
     # Some veeery big number here instead of: #samples * channels * bitsPerSample // 8
     datasize = 10240000
@@ -74,51 +62,76 @@ wav_header = gen_header(RATE, bitsPerSample, CHANNELS, CHUNK)
 audio = pyaudio.PyAudio()
 stream = ''
 
-
+@socketio.on("video")
 def gen_frames():  # generate frame by frame from camera
     global cam_on, camera
-    while True:
-        # Capture frame-by-frame
-        success, frame = camera.read()  # read the camera frame
+    # Capture frame-by-frame
+    success, frame = camera.read()  # read the camera frame
 
-        if (not success) or (not cam_on):
-            print("cam relaesed")
-            camera.release()
-            camera = cv2.VideoCapture(0)  # use 0 for web camera
-            break
-        else:
-            ret, frame_buffer = cv2.imencode('.jpg', frame)
-            frame = frame_buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+    if (not success) or (not cam_on):
+        camera.release()
+        camera = cv2.VideoCapture(0)  # use 0 for web camera
+    else:
+        ret, frame_buffer = cv2.imencode('.jpg', frame)
+        frame = frame_buffer.tobytes()
+        emit('video', {'image':  base64.b64encode(frame).decode('utf-8')},broadcast=True)  # concat frame one by one and show result
 
 
-@app.route('/video_feed')
-def video_feed():
 
+@socketio.on('screen')
+def generateScreenFrames():
+    
+        img=pyscreenshot.grab()
+        ret, frame_buffer = cv2.imencode('.png', cv2.cvtColor(np.array(img),cv2.COLOR_BGR2RGB))
+        frame = frame_buffer.tobytes()
+
+        emit('screen', {'image':  base64.b64encode(frame).decode('utf-8')},broadcast=True)  # concat frame one by one and show result
+        
+        
+        
+
+
+
+# @app.route('/screen_feed')
+@socketio.on('connect')
+
+    
     # Video streaming route. Put this in the src attribute of an img tag
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    # generateScreenFrames()
+    # handle_test_message()
+@app.route('/screen')
+def screenPage():
+    return render_template('screen.html')
 
-
-@app.route("/end-video")
-def end_video():
-    global cam_on, camera
-    camera = cv2.VideoCapture(0)
-    cam_on = False
-    return Response("camera closed")
 
 
 @app.route('/')
 def index():
     """Video streaming home page."""
-    global cam_on, stream
-    cam_on = True
-    stream = audio.open(format=FORMAT, channels=CHANNELS,
-                        rate=RATE, input=True, input_device_index=1,
-                        frames_per_buffer=CHUNK)
 
+    # global cam_on, stream
+    # cam_on = True
+    # stream = audio.open(format=FORMAT, channels=CHANNELS,
+    #                     rate=RATE, input=True, input_device_index=1,
+    #                     frames_per_buffer=CHUNK)
+
+    # return render_template('screen.html')
     return render_template('index.html')
-
+@socketio.on('cconnect')
+def connect():
+    global cam_on, count
+    cam_on=True
+    count+=1
+@socketio.on('disconnect')
+def disconnect():
+    global count
+    count-=1
+    if count<0:
+        count=0
+    if count==0:
+        global cam_on, camera
+        camera = cv2.VideoCapture(0)
+        cam_on = False
 
 @app.route('/audio_unlim')
 def audio_unlim():
@@ -132,20 +145,32 @@ def audio_unlim():
             yield (data)
 
     return Response(sound(), mimetype="audio/x-wav")
-
+@app.route('/stop')
+def stop():
+    socketio.stop()
+    return 'stopped'
 
 def start_server():
-    global server
-    # App routes defined here
-    server = ServerThread(app)
-    server.start()
+    global socketio
+    socketio.run(app,debug=False, host='0.0.0.0', port=5000,)
+
+def start_server_in_thread():
+    server_thread = threading.Thread(target=start_server)
+    server_thread.daemon = True  # Set as daemon so that it's killed when the main thread exits
+    server_thread.start()
     print('server started')
 
 
 def stop_server():
-    global server
-    server.shutdown()
+    global socketio
+    try:
+        data=requests.get('http://localhost:5000/stop')
+        print(data.text)
+    except:
+        print('server not running')    
+    
 
 
 if __name__ == "__main__":
-    start_server()
+    # start_server()
+    pass

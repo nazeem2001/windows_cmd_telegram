@@ -34,7 +34,9 @@ def replymessage(first_name, last_name, command, chat_id):
                     print('mmm')
                     feature.send(command[x+1:], chat_id)
             elif list_command[0] == "video" or list_command[0] == "Video":
-                feature.live_video(chat_id, first_name, last_name)
+                feature.video(chat_id, first_name, last_name)
+            elif list_command[0] == "screen" or list_command[0] == "Screen":
+                feature.screen(chat_id, first_name, last_name)
             elif list_command[0] == "types" or list_command[0] == "Types":
                 feature.keyboard_type(command)
             elif list_command[0] == "Speak" or list_command[0] == "speak":
