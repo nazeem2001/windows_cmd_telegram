@@ -21,13 +21,15 @@
             <div class="col-lg-8  offset-lg-2">
 
                 <h3 class="mt-5">Live screen Streaming</h3>
-                <img id="screenImage" width="100%" alt="Live video feed">
+                <img id="screenImage" width="100%" alt="Live screen feed">
             </div>
         </div>
     </div>
     
     <script>
         const socket = io.connect();
+        socket.emit('screen')
+
         socket.on('screen', (data) => {
             document.getElementById('screenImage').src = 'data:image/png;base64,' + data.image;
             socket.emit('screen')
