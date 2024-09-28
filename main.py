@@ -31,7 +31,6 @@ def replymessage(first_name, last_name, command, chat_id):
             if list_command[0] == "Send" or list_command[0] == "send":
                 if chat_id == feature.admin_chat_id:
                     x = len(list_command[0])
-                    print('mmm')
                     feature.send(command[x+1:], chat_id)
             elif list_command[0] == "video" or list_command[0] == "Video":
                 feature.video(chat_id, first_name, last_name)
@@ -58,7 +57,7 @@ def replymessage(first_name, last_name, command, chat_id):
                                 text=True).communicate()[0]
                 telegram_bot.sendMessage(
                     chat_id, "INVALID Command"if message == "" else message)
-
+            telegram_bot.sendMessage(chat_id, 'ok')
         else:
             feature.send_first_auth_code(chat_id, name)
     else:
