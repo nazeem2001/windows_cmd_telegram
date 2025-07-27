@@ -610,16 +610,14 @@ here is log''')
                 chat_id, "You are not authorized to use this command.")
             return
 
-        self.telegram_bot.sendMessage(chat_id, "Authorized Users:")
+        user_list = "Authorized Users:\n"
         for user in self.auth_list['authorized']:
-            if (str(user['chat_id']).startswith(self.admin_chat_id) and str(user['chat_id']).endswith(self.admin_chat_id)) or user['chat_id'] is None:
+            if user['chat_id'] is None or user['chat_id'] == int(self.admin_chat_id):
                 continue
-            self.telegram_bot.sendMessage(
-                chat_id, f"Name: {user['Name']} "
-            )
-            self.telegram_bot.sendMessage(
-                chat_id, f"{user['chat_id']}"
-            )
+            user_list += f"Name: {user['Name']}, Chat ID:`{user['chat_id']}`\n"
+
+        self.telegram_bot.sendMessage(
+            chat_id, user_list, parse_mode='MarkdownV2')
 
     def kick_user(self, chat_id, command, list_command, first_name, last_name):
         """
