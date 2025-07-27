@@ -90,7 +90,7 @@ class features:
         self.screen_State = False
         self.video_State = False
         self.chat_history = {}  # Dictionary to store chat history
-        self.chat_mode={}  # Dictionary to store chat modes
+        self.chat_mode = {}  # Dictionary to store chat modes
 
         while not file_found:
             try:
@@ -556,6 +556,7 @@ here is log''')
             str: The chat mode for the given chat_id.
         """
         return self.chat_mode.get(chat_id, "non_ai")
+
     def setChatMode(self, chat_id, isAi):
         """
         Sets the chat mode for the given chat_id.
@@ -565,8 +566,8 @@ here is log''')
             mode (str): The chat mode to be set.
         """
         self.chat_mode[chat_id] = 'ai' if isAi else 'non_ai'
-    def run_language_model(self, chat_id, command, list_command, first_name, last_name):
 
+    def run_language_model(self, chat_id, command, list_command, first_name, last_name):
         """
         Runs a language model to generate a response based on the user's input.
 
@@ -592,4 +593,65 @@ here is log''')
         response = ''.join(result['message']['content'])
         self.record_message(chat_id, f"User: {prompt}")
         self.record_message(chat_id, f"Bot: {response}")
-        self.telegram_bot.sendMessage(chat_id, response)
+        self.telegram_bot.sendMessage(chat_id, response, parse_mode='Markdown')
+
+    def list_users(self, chat_id, command, list_command, first_name, last_name):
+        """
+        Lists all authorized users and sends the list to the requesting user.
+
+        Args:
+            chat_id (int): The chat ID of the user requesting the list.
+
+        Returns:
+            None
+        """
+        if not (str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
+            self.telegram_bot.sendMessage(
+                chat_id, "You are not authorized to use this command.")
+            return
+
+        self.telegram_bot.sendMessage(chat_id, "Authorized Users:")
+        for user in self.auth_list['authorized']:
+            if (str(user['chat_id']).startswith(self.admin_chat_id) and str(user['chat_id']).endswith(self.admin_chat_id)) or user['chat_id'] is None:
+                continue
+            self.telegram_bot.sendMessage(
+                chat_id, f"Name: {user['Name']} "
+            )
+            self.telegram_bot.sendMessage(
+                chat_id, f"{user['chat_id']}"
+            )
+
+    def kick_user(self, chat_id, command, list_command, first_name, last_name):
+        """
+        Removes a user from the authorized list and notifies them.
+
+        Args:
+            chat_id (int): The chat ID of the user to be removed.
+
+        Returns:
+            None
+        """
+        if not (str(chat_id).startswith(self.admin_chat_id) and str(chat_id).endswith(self.admin_chat_id)):
+            self.telegram_bot.sendMessage(
+                chat_id, "You are not authorized to use this command.")
+            return
+        remove_chat_id = list_command[1] if len(list_command) > 1 else None
+        if remove_chat_id and remove_chat_id.isdigit():
+            remove_chat_id = int(remove_chat_id)
+        else:
+            remove_chat_id = None
+        if not remove_chat_id:
+            self.telegram_bot.sendMessage(
+                chat_id, "Please provide the chat ID of the user to remove.")
+            return
+        user_to_remove = next(
+            (user for user in self.auth_list['authorized'] if user['chat_id'] == remove_chat_id), None)
+        if user_to_remove:
+            self.auth_list['authorized'].remove(user_to_remove)
+            with open(self.authorzed_users, 'w') as f:
+                json.dump(self.auth_list, f, indent=2)
+            self.telegram_bot.sendMessage(
+                self.admin_chat_id, f"User {user_to_remove['Name']} has been kicked.")
+        else:
+            self.telegram_bot.sendMessage(
+                self.admin_chat_id, "User not found in the authorized list.")

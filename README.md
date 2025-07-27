@@ -9,6 +9,8 @@
 - screen: Start screen streaming.
 - speak <text>: Convert text to speech.
 - keylog: Start or stop the key logger.
+- list: List all authorized users.
+- kick <chat_id>: Remove a user from the authorized list.
 
 ## Features
 

